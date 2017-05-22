@@ -1,11 +1,10 @@
 var Urls = {
     tableData: '/api/rest/openings/last/',
-    socketUrl: '/websocket/',
-    locations: '/api/rest/dictionaries/locations/',
-    firms: '/api/rest/dictionaries/firms',
-    // tableData: 'http://5.101.112.113:9090//api/rest/openings/last/',
+    socketUrl: '/websocket/openings/',
+    locations: '/api/rest/openings/dictionaries/locations/',
+    firms: '/api/rest/openings/dictionaries/firms',
     // token: 'https://dev.firmprospects.com/recentjobstoken'
-    token: 'http://192.168.1.59/api_recentjobs_token.php'
+    token: '/recentjobstoken'
 };
 
 module.exports = Urls;

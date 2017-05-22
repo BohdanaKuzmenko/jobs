@@ -10,19 +10,20 @@ class App extends React.Component {
 
     constructor(props) {
         super(props);
-        var apiAdd = window.apiAddr.host + ":" + window.apiAddr.port;
         this.state = {
-            socketUrl: apiAdd + props.socketUrl,
-            tableDataUrl: apiAdd + props.tableDataUrl,
-            locationsUrl: apiAdd + props.locationsUrl,
-            firmsUrl: apiAdd + props.firmsUrl,
+            browserNotificationAllowed: null,
+            socketUrl: props.socketUrl,
+            tableDataUrl: props.tableDataUrl,
+            locationsUrl: props.locationsUrl,
+            firmsUrl: props.firmsUrl,
             tokenUrl: props.tokenDataUrl,
 
             locations: null,
             firms: null,
             jobs: null,
             allowNotification: null,
-            notificationKeyWords: null,
+            notificationLocationKeyWords: null,
+            notificationFirmKeyWords: null,
             token: null,
             auth: true,
             notificationGranted: false
@@ -38,9 +39,17 @@ class App extends React.Component {
     }
 
     filterNotifibleJobs(value) {
-        if (!_.isEmpty(this.state.notificationKeyWords)) {
+        if (!_.isEmpty(this.state.notificationFirmKeyWords)) {
+            var blackListFirms = this.state.notificationFirmKeyWords.split(',');
+            if (blackListFirms.includes(value.firm)) {
+                return false;
+            }
+
+        }
+
+        if (!_.isEmpty(this.state.notificationLocationKeyWords)) {
             var jobContainsNotifyKey = false;
-            var keysArray = this.state.notificationKeyWords.split(',');
+            var keysArray = this.state.notificationLocationKeyWords.split(',');
             for (var i = 0; i < keysArray.length; i++) {
                 var key = keysArray[i].toLowerCase().replace(/[^a-zA-Z]+/g, '');
                 var jobLocation = value["location"].toLowerCase().replace(/[^a-zA-Z]+/g, '')
@@ -52,6 +61,7 @@ class App extends React.Component {
             return jobContainsNotifyKey;
         }
         return true;
+
     }
 
     onNewJobsData(newJobs) {
@@ -126,9 +136,10 @@ class App extends React.Component {
 
 
     showNotification(urlsArray) {
+        console.log(this.state.allowNotification)
         if (this.isSupported(window) && this.state.allowNotification) {
             if (Notification.permission === "granted") {
-                var openings = urlsArray.slice(0, 3).map(function (job) {
+                var openings = urlsArray.slice(0, 2).map(function (job) {
                     return "-" + [job["title"], job["firm"], job["location"]].filter(jobAttr =>!_.isEmpty(jobAttr)).join(" - ")
                 });
 
@@ -167,32 +178,47 @@ class App extends React.Component {
         });
     }
 
-    onChangeNotificationSettings(allow, keys) {
+    onChangeNotificationSettings(allow, locationKeys, firmsKeys) {
         if (allow && this.isNotificationDenied()) {
             this.blockNotificationAttention()
         }
         this.askPrimaryNotificationPermissions()
         this.setState({
             "allowNotification": allow,
-            "notificationKeyWords": keys
+            "notificationLocationKeyWords": locationKeys,
+            "notificationFirmKeyWords": firmsKeys
         })
     }
 
     componentWillMount() {
-        this.askPrimaryNotificationPermissions();
+        if (this.isSupported(window)){
+            this.askPrimaryNotificationPermissions();
 
-        var allowNotification = (_.isUndefined(cookie.load('allowNotification'))) ?
+            var allowNotification = (_.isUndefined(cookie.load('allowNotification'))) ?
             Notification.permission == 'granted' : cookie.load('allowNotification');
 
-        var keyWords = (_.isUndefined(cookie.load('keyWords'))) ? null : cookie.load('keyWords');
+            var locationsKeyWords = (_.isUndefined(cookie.load('locationsKeyWords'))) ? null : cookie.load('locationsKeyWords');
+            var firmKeyWords = (_.isUndefined(cookie.load('firmKeyWords'))) ? null : cookie.load('firmKeyWords');
 
-        if (allowNotification && this.isNotificationDenied()) {
-            this.blockNotificationAttention()
+            if (allowNotification && this.isNotificationDenied()) {
+                this.blockNotificationAttention()
+            }
+            this.setState({
+                "browserNotificationAllowed": true,
+                "allowNotification": allowNotification,
+                "notificationLocationKeyWords": locationsKeyWords,
+                "notificationFirmKeyWords": firmKeyWords,
+            });
         }
-        this.setState({
-            "allowNotification": allowNotification,
-            "notificationKeyWords": keyWords
-        });
+        else {
+            this.setState({
+                "browserNotificationAllowed": false,
+                "allowNotification": null,
+                "notificationLocationKeyWords": null,
+                "notificationFirmKeyWords": null,
+            });
+        }
+
     }
 
     checkPermission() {
@@ -228,12 +254,14 @@ class App extends React.Component {
     }
 
     render() {
-        var modal = (!_.isNull(this.state.locations) && !_.isNull(this.state.firms)) ?
+        var modal = (this.state.browserNotificationAllowed &&!_.isNull(this.state.locations) && !_.isNull(this.state.firms)) ?
             <ModalWindowComponent
-                onChangeNotificationSettings={(allow, keys) => this.onChangeNotificationSettings(allow, keys)}
+                onChangeNotificationSettings={(allow, locations, firms) => this.onChangeNotificationSettings(allow, locations, firms)}
                 allowNotification={this.state.allowNotification}
                 locations={this.state.locations}
-                keys={this.state.notificationKeyWords}
+                firms={this.state.firms}
+                locationKeys={this.state.notificationLocationKeyWords}
+                firmKeys={this.state.notificationFirmKeyWords}
             /> :
             "";
 

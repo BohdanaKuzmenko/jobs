@@ -118,9 +118,9 @@ class TableComponent extends React.Component {
                                 <a className="icon item" onClick={this.moveToNextPrevPage.bind(this, -1)}>
                                     <i className="caret left chevron icon"></i>
                                 </a>
-                                <div className="ui big basic label">
+                                <a className="icon item">
                                     {parseInt(this.state.page) + 1}
-                                </div>
+                                </a>
                                 <a className="icon item" onClick={this.moveToNextPrevPage.bind(this, 1)}>
                                     <i className="caret right chevron icon"></i>
                                 </a>

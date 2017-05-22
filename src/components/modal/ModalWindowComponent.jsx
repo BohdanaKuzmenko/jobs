@@ -6,7 +6,8 @@ class ModalWindowComponent extends React.Component {
         super(props);
         this.state = {
             checked: this.props.allowNotification,
-            keyWords: this.props.keys
+            locationsKeyWords: this.props.locationKeys,
+            firmKeyWords: this.props.firmKeys
         }
     }
 
@@ -18,7 +19,7 @@ class ModalWindowComponent extends React.Component {
             var checked = $(this).find('input').is(':checked')
             cookie.save('allowNotification', checked);
             self.setState({"checked": checked})
-            self.props.onChangeNotificationSettings(checked, self.state.keyWords)
+            self.props.onChangeNotificationSettings(checked, self.state.locationsKeyWords, self.state.firmKeyWords)
         })
 
     }
@@ -27,10 +28,18 @@ class ModalWindowComponent extends React.Component {
         $('.ui.modal.editform').modal('show');
     }
 
-    onKeysChange(keys) {
-        this.setState({"keyWords": keys});
-        cookie.save('keyWords', keys);
-        this.props.onChangeNotificationSettings(this.state.checked, keys)
+    onLocationKeysChange(keys) {
+        this.props.onChangeNotificationSettings(this.state.checked, keys, this.state.firmKeyWords)
+        this.setState({"locationsKeyWords": keys});
+        cookie.save('locationsKeyWords', keys);
+
+    }
+
+    onFirmKeysChange(keys) {
+        this.props.onChangeNotificationSettings(this.state.checked, this.state.locationsKeyWords, keys)
+        this.setState({"firmKeyWords": keys});
+        cookie.save('firmKeyWords', keys);
+
     }
 
 
@@ -48,6 +57,10 @@ class ModalWindowComponent extends React.Component {
 
         var locations = this.props.locations.map(function (location) {
             return location["name"]
+        });
+
+        var firms = this.props.firms.map(function (firm) {
+            return firm["name"]
         });
 
         var switchValue = (this.props.allowNotification) ? "Off" : "On"
@@ -79,8 +92,19 @@ class ModalWindowComponent extends React.Component {
                             fluid={true}
                             id="locations"
                             dropdownTitle="Select location(s)"
-                            onKeysChange={(keys) => this.onKeysChange(keys)}
-                            defaultValue={this.props.keys}
+                            onKeysChange={(keys) => this.onLocationKeysChange(keys)}
+                            defaultValue={this.props.locationKeys}
+                        />
+
+                        <h5>Select firms to exclude from pop-up alerts.</h5>
+                        <DropDownComponent
+                            fields={firms}
+                            multiple={true}
+                            fluid={true}
+                            id="firms"
+                            dropdownTitle="Select firms(s)"
+                            onKeysChange={(keys) => this.onFirmKeysChange(keys)}
+                            defaultValue={this.props.firmKeys}
 
                         />
                     </div>

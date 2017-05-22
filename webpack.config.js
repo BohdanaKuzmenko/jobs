@@ -27,9 +27,19 @@ module.exports = {
     },
     plugins: [
         new webpack.ProvidePlugin({
+            "_": "underscore",
             "React": "react",
-            "ReactDOM": "react-dom",
-            "_": "underscore"
+            "ReactDOM": "react-dom"
+        }),
+        new webpack.DefinePlugin({
+            'process.env':{
+                'NODE_ENV': JSON.stringify('production')
+            }
+        }),
+        new webpack.optimize.UglifyJsPlugin({
+            compress: {
+                warnings: true
+            }
         })
     ]
 };
